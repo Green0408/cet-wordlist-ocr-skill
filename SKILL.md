@@ -42,6 +42,46 @@ absorb v. 吸收；使专心
 
 完整规范见 `references/format.md`；正确样例见 `templates/example.txt`。
 
+## 依赖政策（先看这一节）
+
+**不要为了这个 skill 安装 PyMuPDF / pdf2image / OCR Python 包。**
+
+- PyMuPDF 只是可选的渲染加速，不是前置条件。
+- 不要把 `pip install pymupdf` 当成必须步骤，也不要无限重试。
+- 超过 **60 秒**没装完就直接放弃，切下面的 fallback。
+- 能直接看 PDF / 图片的视觉 agent，根本不需要渲染库。
+
+### 卡在 PyMuPDF 时
+
+立即停止安装，按顺序选一条：
+
+1. **直接把 PDF 或页面图片交给视觉模型识别**
+   大多数在线 agent 可以直接读 PDF 页面；不需要先转 PNG。
+2. **已有 PDF 渲染工具**
+   用 `pdftoppm` / `pdftocairo` / `magick` / Ghostscript / `mutool` 把页面转成 PNG。
+3. **用平台自带能力**
+   Chrome / Edge 打开 PDF，逐页截图；或使用 `office` skill 的 PDF 渲染能力。
+4. **让用户提供图片**
+   请用户把页面导出为 PNG/JPG，再按本 skill 识别。
+5. **外部 OCR**
+   Adobe / ABBYY / 白描 / 微信文字识别，导出 TXT 后跑校验器。
+
+先跑预检：
+
+```bash
+python scripts/preflight_pdf.py
+```
+
+它会列出本机可用的渲染方式，并明确提示不要安装 PyMuPDF。
+
+### 给卡住的 agent 的一句话
+
+```text
+停止安装 pymupdf。pymupdf 不是 cet-wordlist-ocr 的依赖。
+请直接读取 PDF 页面；不能直接读就用 pdftoppm / 浏览器截图 / 让用户提供图片。
+不要再跑 pip install，也不要重试安装。
+```
+
 ## 工作流
 
 ### 1. 判断输入
