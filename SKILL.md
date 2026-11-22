@@ -1,12 +1,41 @@
 ---
 name: cet-wordlist-ocr
-description: 把扫描版/无文字层 PDF 词书 OCR 成《四六级背单词》可直接导入的 UTF-8 词表：双栏按左栏再右栏、去音标、去页眉页脚、合并释义续行、去重，并附 agent 提示词、格式校验脚本和示例。用户要求「OCR 词书」「把 PDF/图片转成可导入词表」「检查词表格式」「扫描版四级/六级词汇」时使用。
+description: 零额外依赖地把扫描版/无文字层 PDF 词书 OCR 成《四六级背单词》可直接导入的 UTF-8 词表：双栏按左栏再右栏、去音标、去页眉页脚、合并释义续行、去重，并附 agent 提示词、格式校验脚本和示例。明确禁止 pip/npm/winget/apt/brew 安装依赖。用户要求「OCR 词书」「把 PDF/图片转成可导入词表」「检查词表格式」「扫描版四级/六级词汇」时使用。
 ---
 
 # 四六级词书 OCR → 可导入词表
 
 目标：把扫描版 PDF / 图片词书交给在线 OCR agent，产出一个 **UTF-8 `.txt`**，
 格式能直接被《四六级背单词》的「导入」页解析，而不是让应用内 OCR 硬扛。
+
+## 零依赖承诺（先读，优先级最高）
+
+这个 skill **不允许为了完成任务安装任何包**。
+
+禁止运行：
+
+```text
+pip / pip3 / uv pip
+poetry add / conda install
+npm install / pnpm add / yarn add
+winget install / choco install / scoop install
+apt-get install / brew install
+下载 OCR 模型、traineddata、字体或 PDF 工具
+```
+
+允许使用：
+
+- Python 标准库
+- 机器上**已经存在**的浏览器、PDF 工具、OCR 工具
+- agent 自己的视觉 / PDF 阅读能力
+
+缺少工具时不是“装一个”，而是：
+
+1. 跑 `python scripts/preflight_pdf.py`
+2. 按输出选一个 fallback
+3. 仍然不行就让用户提供图片或外部 OCR 文本
+
+**一旦开始安装，就已经走错路了。** 已经卡住时直接停止进程，不要重试。
 
 ## 最短一句话
 
@@ -50,6 +79,21 @@ absorb v. 吸收；使专心
 - 不要把 `pip install pymupdf` 当成必须步骤，也不要无限重试。
 - 超过 **60 秒**没装完就直接放弃，切下面的 fallback。
 - 能直接看 PDF / 图片的视觉 agent，根本不需要渲染库。
+
+### Agent 最容易去装的依赖
+
+| 它想干什么 | 常见错误动作 | 不要装 | 正确做法 |
+|---|---|---|---|
+| 把 PDF 转图片 | `pip install pymupdf` / `pdf2image` | PyMuPDF、pdf2image、poppler | 直接读 PDF；Edge/Chrome 截图；用户给图片 |
+| 抽 PDF 文字 | `pip install pypdf` / `pdfplumber` | pypdf、PyPDF2、pdfplumber | 先用应用导入；失败走视觉 OCR |
+| 识别图片文字 | `pip install pytesseract` / `easyocr` / `paddleocr` | pytesseract、EasyOCR、PaddleOCR | 用 agent 视觉；或外部 OCR |
+| 处理 DOCX | `pip install python-docx` | python-docx、docx2txt | 应用本身能导入 `.docx`，不要自己解析 |
+| 猜文件编码 | `pip install chardet` | chardet、charset-normalizer | 依次试 `utf-8-sig`、`utf-8`、`gb18030` |
+| 裁图 / 转格式 | `pip install pillow` / `apt install imagemagick` | Pillow、ImageMagick、GraphicsMagick | 浏览器截图；用户给 PNG/JPG |
+| 装 PDF.js / Tesseract | `npm install pdfjs-dist tesseract.js` | npm 包、CDN 下载、模型文件 | 应用内已有；agent 不需要再搭一套 |
+| 装 PDF 渲染器 | `winget/choco/apt/brew install poppler` | 任何包管理器 | 接受“没有渲染器”，走视觉或截图 |
+
+记住：**这个 skill 的校验器只用 Python 标准库**。不需要 pandas、numpy、OpenCV。
 
 ### 卡在 PyMuPDF 时
 
@@ -109,6 +153,8 @@ python scripts/preflight_pdf.py
 7. 不要翻译、改写、补写释义；只保留页面上真实存在的中文。
 8. 同一单词只输出一次。
 9. 只输出纯文本，不要 Markdown 表格、不要代码围栏、不要解释。
+10. 不要安装任何依赖：禁止 pip / npm / winget / apt / brew，禁止下载模型。
+    不能直接读 PDF 就停下来要页面图片，不要尝试装渲染库。
 
 输出示例：
 ===== 第 1 页 =====

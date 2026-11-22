@@ -12,6 +12,31 @@ python scripts/check_wordlist.py 词表.txt
 - 退出码 1：有格式错误
 - `--json`：机器可读输出
 
+## 零依赖，禁止安装
+
+不要运行：
+
+```text
+pip / pip3 / uv pip / poetry / conda
+npm / pnpm / yarn
+winget / choco / scoop / apt / brew
+```
+
+也不要下载 OCR 模型、traineddata、字体或所谓“必需”的 PDF 工具。
+
+常见依赖陷阱：
+
+| 任务 | 不要安装 | 改用 |
+|---|---|---|
+| PDF 转图片 | PyMuPDF、pdf2image、poppler | 直接读 PDF / 浏览器截图 / 用户图片 |
+| 抽 PDF 文字 | pypdf、pdfplumber | 应用导入或视觉 OCR |
+| 图片 OCR | pytesseract、EasyOCR、PaddleOCR | agent 视觉 / 外部 OCR |
+| DOCX | python-docx | 应用直接导入 `.docx` |
+| 编码检测 | chardet | 试 UTF-8 / GB18030 |
+| PDF.js / Tesseract | npm 安装 | 应用内已有，agent 不需要 |
+
+这个 skill 的校验器只用 Python 标准库。
+
 ## 不要安装 PyMuPDF
 
 这个 skill 不需要 PyMuPDF。若 agent 在 `pip install pymupdf` 卡住：
