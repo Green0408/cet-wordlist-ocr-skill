@@ -57,11 +57,21 @@ class ValidatorTests(unittest.TestCase):
         self.assertFalse(report.ok)
         self.assertTrue(any("多个单词" in i.message for i in report.errors))
 
-    def test_ipa_is_rejected(self):
+    def test_ipa_is_accepted(self):
         report = checker.validate_text(
             "===== 第 1 页 =====\n"
-            "expand [ɪkˈspænd] v. (使)膨胀\n",
+            "expand [ɪkˈspænd] v. (使)膨胀\n"
+            "sufficient 【səˈfɪʃənt】 a. 足够的\n",
             "ipa.txt",
+        )
+        self.assertTrue(report.ok, [i.as_text() for i in report.errors])
+        self.assertEqual(report.entries, 2)
+
+    def test_unclosed_ipa_is_rejected(self):
+        report = checker.validate_text(
+            "===== 第 1 页 =====\n"
+            "expand [ɪkˈspænd v. (使)膨胀\n",
+            "ipa-broken.txt",
         )
         self.assertFalse(report.ok)
         self.assertTrue(any("音标" in i.message for i in report.errors))

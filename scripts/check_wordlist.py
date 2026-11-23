@@ -12,7 +12,7 @@ Exit codes:
 
 The target app parses:
     ===== 第 N 页 =====
-    英文单词 + 词性（可选） + 中文释义
+    英文单词 + 音标（可选，方括号） + 词性（可选） + 中文释义
 
 This checker is deliberately strict: it catches the OCR mistakes that make
 the app silently drop entries or merge two columns into one definition.
@@ -29,14 +29,15 @@ from pathlib import Path
 
 PAGE_RE = re.compile(r"^(?:={3,}|-{3,})\s*第\s*(\d+)\s*页\s*(?:={3,}|-{3,})$")
 WORD = r"[A-Za-z][A-Za-z'\-]{1,33}"
+IPA = r"(?:\[[^\[\]]{1,80}\]|【[^】]{1,80}】)"
 ENTRY_RE = re.compile(
-    rf"^(?P<word>{WORD}(?:\s+{WORD}){{0,3}})"
-    rf"\s+(?:(?P<pos>[a-z]{{1,4}})\.\s*)?"
+    rf"^(?P<word>{WORD}(?:\s+{WORD}){{0,3}})\s*"
+    rf"(?P<ipa>{IPA})?\s*"
+    rf"(?:(?P<pos>[a-z]{{1,4}})\.\s*)?"
     rf"(?P<meaning>[（(]?[\u4e00-\u9fff].*)$"
 )
 CJK_RE = re.compile(r"[\u4e00-\u9fff]")
 ENGLISH_RE = re.compile(r"[A-Za-z]{2,}")
-IPA_BRACKET_RE = re.compile(r"\[[^\[\]]{0,80}\]|【[^】]{0,80}】")
 TWO_WORD_IPA_RE = re.compile(rf"\b{WORD}\s*(?=\[|【)")
 TWO_POS_RE = re.compile(rf"\b{WORD}\s+[a-z]{{1,4}}\.\s+")
 HEADER_RE = re.compile(
@@ -133,9 +134,10 @@ def validate_text(text: str, path: str = "<string>") -> Report:
                    "检测到 Markdown 标题、列表或表格；词表必须是纯文本单行")
             continue
 
-        if IPA_BRACKET_RE.search(line):
+        if (line.count("[") != line.count("]") or
+                line.count("【") != line.count("】")):
             _issue(report, lineno, "ERROR",
-                   "残留音标方括号，导入前删除 [...] / 【...】")
+                   "音标方括号不完整；应写成 [音标] 或 【音标】")
             continue
 
         word_ipa_hits = TWO_WORD_IPA_RE.findall(line)

@@ -1,6 +1,6 @@
 # cet-wordlist-ocr
 
-把扫描版 / 无文字层 PDF 词书 OCR 成《四六级背单词》可直接导入的 `.txt`。
+把扫描版 / 无文字层 PDF 词书 OCR 成《四六级背单词》可直接导入的 `.txt`，保留可选的方括号音标。
 
 ## 用法
 
@@ -70,11 +70,11 @@ python scripts/preflight_pdf.py
 python -m unittest discover -s tests -v
 ```
 
-当前 7 个测试，覆盖：
+当前 8 个测试，覆盖：
 
-- 正确样例
+- 正确样例（含音标）
 - 双栏被拼成一行
-- 残留音标
+- 音标方括号完整/缺失
 - 只有英文的行
 - 只有中文的续行
 - 单词重复
